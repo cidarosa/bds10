@@ -3,6 +3,9 @@ import './styles.css';
 import Pagination from 'components/Pagination';
 import EmployeeCard from 'components/EmployeeCard';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { SpringPage } from 'types/vendor/spring';
+import { Employee } from 'types/employee';
 
 const employeeHardCode = { // delete
   id: 1,
@@ -15,6 +18,9 @@ const employeeHardCode = { // delete
 };
 
 const List = () => {
+
+  //estado da página
+  const [page, setPage ] = useState<SpringPage<Employee>>();
 
   const handlePageChange = (pageNumber: number) => {
     // to do
