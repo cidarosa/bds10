@@ -34,6 +34,16 @@
   font-weight: bold;
 }
 
+.employee-crud-select__control{
+  /* do base-input */
+  border-radius: 10px !important; 
+    font-size: 1em;
+    letter-spacing: -0.015em;
+    color: #263238; 
+    height: 50px;
+}
+
+
 @media (min-width: 576px) {
 
   .employee-crud-form-card {

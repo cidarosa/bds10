@@ -1,81 +1,63 @@
 import './styles.css';
 
 import { toast } from 'react-toastify';
-import { useHistory, useParams } from 'react-router-dom';
+import { useHistory} from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Department } from 'types/department';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { Employee } from 'types/employee';
 import { requestBackend } from 'util/requests';
 import { AxiosRequestConfig } from 'axios';
-
-type UrlParams = {
-  employeeId: string;
-};
+import Select from 'react-select';
 
 const Form = () => {
-  const { employeeId } = useParams<UrlParams>();
-
-  const isEditing = employeeId !== 'create';
 
   const history = useHistory();
 
-  //departments do backend - inicializando lista vazia
   const [selectDepartments, setSelectDepartments] = useState<Department[]>([]);
 
-  const { 
-    register, 
+  const {
+    register,
     handleSubmit,
-    formState: {errors},  
-    setValue,
-   } = useForm<Employee>();
+    formState: { errors },    
+  } = useForm<Employee>();
 
   useEffect(() => {
-    requestBackend({ url: '/departments' }).then((response) => {
+    requestBackend({
+      method: 'GET',
+      url: '/departments',
+       withCredentials: true,
+    }).then((response) => {
       setSelectDepartments(response.data.content);
     });
   }, []);
 
-  useEffect(() => {
-    //se estiver editando, preenche os dados do form
-    if (isEditing) {
-      // carregar os dados de employee - chama requisição do backend - chamando direto
-      requestBackend({ url: `/employees/${employeeId}` }).then((response) => {
-        const employee = response.data as Employee;
-
-        setValue('name', employee.name);
-        setValue('email', employee.email);
-        setValue('department', employee.department);
-      });
-    }
-  }, [isEditing, employeeId, setValue]); //dependencias
 
   const onSubmit = (formData: Employee) => {
-    /* configuração da requesição para salvar o Employee */
 
     const data = {
       ...formData,
     };
 
     const config: AxiosRequestConfig = {
-      method: isEditing ? 'PUT' : 'POST',
-      url: isEditing ? `/employee/${employeeId}` : '/employees',
-      data,
+      method:  'POST',
+      url:  '/employees',
+      data: data,
       withCredentials: true,
     };
 
     requestBackend(config)
       .then(() => {
-        toast.info('Empregado cadastrado com sucesso!');
+        toast.info('Cadastrado com sucesso');
         history.push('/admin/employees');
       })
       .catch(() => {
-        toast.error('Erro ao cadastrar empregado');
+        toast.error('Erro ao cadastrar');
       });
   };
 
   const handleCancel = () => {
-    // to do
+
     history.push('/admin/employees');
   };
 
@@ -106,23 +88,52 @@ const Form = () => {
               </div>
 
               <div className="margin-bottom-30">
-                <input 
-                { ...register('email', {
-                  required: 'Campo obrigatório',
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: 'E-mail inválido'
-                }
-                })}
-                type="text"
-                className={`form-control base-input ${errors.email ? 'is-invalid' : ''} `} 
-                placeholder="E-mail"
-                name='email'
-                data-testid="email"
+                <input
+                  {...register('email', {
+                    required: 'Campo obrigatório',
+                    pattern: {
+                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                      message: 'Email inválido',
+                    },
+                  })}
+                  type="text"
+                  className={`form-control base-input ${
+                    errors.email ? 'is-invalid' : ''
+                  } `}
+                  placeholder="E-mail"
+                  name="email"
+                  data-testid="email"
                 />
                 <div className="invalid-feedback d-block">
                   {errors.email?.message}
                 </div>
+              </div>
+
+              <div className="margin-bottom-30">
+                <label htmlFor="department" className="d-none">
+                  Departamento
+                </label>
+                <Controller
+                  name="department"
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      options={selectDepartments}
+                      classNamePrefix="employee-crud-select"
+                      getOptionLabel={(department: Department) =>
+                        department.name
+                      }
+                      getOptionValue={(department: Department) =>
+                        String(department.id)
+                      }
+                      inputId="department"
+                    />
+                  )}
+                />
+                {errors.department && (
+                  <div className="invalid-feedback d-block">Campo obrigatório</div>
+                )}
               </div>
             </div>
           </div>
