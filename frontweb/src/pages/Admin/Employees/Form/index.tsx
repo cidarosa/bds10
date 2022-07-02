@@ -105,7 +105,7 @@ const Form = () => {
                 </div>
               </div>
 
-              <div className="margin-botttom-30">
+              <div className="margin-bottom-30">
                 <label htmlFor="department" className="d-none">
                   Departamento
                 </label>
