@@ -1,63 +1,59 @@
+
 import './styles.css';
 
-import { toast } from 'react-toastify';
-import { useHistory} from 'react-router-dom';
+import { AxiosRequestConfig } from 'axios';
 import { useEffect, useState } from 'react';
-import { Department } from 'types/department';
 import { Controller, useForm } from 'react-hook-form';
+import Select from 'react-select';
+import { Department } from 'types/department';
 import { Employee } from 'types/employee';
 import { requestBackend } from 'util/requests';
-import { AxiosRequestConfig } from 'axios';
-import Select from 'react-select';
+import { useHistory } from 'react-router-dom';
+
+import { toast } from 'react-toastify';
 
 const Form = () => {
-
   const history = useHistory();
-
+  
   const [selectDepartments, setSelectDepartments] = useState<Department[]>([]);
 
   const {
     register,
     handleSubmit,
-    formState: { errors },    
+    formState: { errors },
+    control,
   } = useForm<Employee>();
 
   useEffect(() => {
-    requestBackend({
+    const config: AxiosRequestConfig = {
       method: 'GET',
       url: '/departments',
-       withCredentials: true,
-    }).then((response) => {
-      setSelectDepartments(response.data.content);
-    });
-  }, []);
-
-
-  const onSubmit = (formData: Employee) => {
-
-    const data = {
-      ...formData,
-    };
-
-    const config: AxiosRequestConfig = {
-      method:  'POST',
-      url:  '/employees',
-      data: data,
       withCredentials: true,
     };
+    requestBackend(config)
+    .then((response) => 
+      setSelectDepartments(response.data)
+    );
+  }, []);
 
+  const onSubmit = (formData: Employee) => {
+    const config: AxiosRequestConfig = {
+      method: 'POST',
+      url: '/employees',
+      data: formData,
+      withCredentials: true,
+    };
     requestBackend(config)
       .then(() => {
         toast.info('Cadastrado com sucesso');
         history.push('/admin/employees');
       })
-      .catch(() => {
+      .catch((response) => {
         toast.error('Erro ao cadastrar');
       });
   };
 
   const handleCancel = () => {
-
     history.push('/admin/employees');
   };
 
@@ -72,16 +68,17 @@ const Form = () => {
               <div className="margin-bottom-30">
                 <input
                   {...register('name', {
-                    required: 'Campo obrigadtório',
+                    required: 'Campo obrigatório',
                   })}
                   type="text"
                   className={`form-control base-input ${
                     errors.name ? 'is-invalid' : ''
-                  } `}
-                  placeholder="Nome do empregado"
+                  }`}
+                  placeholder="Nome do funcionário"
                   name="name"
                   data-testid="name"
                 />
+
                 <div className="invalid-feedback d-block">
                   {errors.name?.message}
                 </div>
@@ -99,8 +96,8 @@ const Form = () => {
                   type="text"
                   className={`form-control base-input ${
                     errors.email ? 'is-invalid' : ''
-                  } `}
-                  placeholder="E-mail"
+                  }`}
+                  placeholder="Email do funcionário"
                   name="email"
                   data-testid="email"
                 />
@@ -109,13 +106,14 @@ const Form = () => {
                 </div>
               </div>
 
-              <div className="margin-bottom-30">
+              <div className="margin-botttom-30">
                 <label htmlFor="department" className="d-none">
                   Departamento
                 </label>
                 <Controller
                   name="department"
                   rules={{ required: true }}
+                  control={control}
                   render={({ field }) => (
                     <Select
                       {...field}
@@ -132,7 +130,9 @@ const Form = () => {
                   )}
                 />
                 {errors.department && (
-                  <div className="invalid-feedback d-block">Campo obrigatório</div>
+                  <div className="invalid-feedback d-block">
+                    Campo obrigatório
+                  </div>
                 )}
               </div>
             </div>
